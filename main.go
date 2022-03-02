@@ -11,14 +11,19 @@ import (
 )
 
 func main() {
+	// handle config
 	cfg.InitViper()
 
+	// start server
 	ws := server.NewWebServer()
 
+	// wait for OS signals
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM)
 	signal.Notify(c, syscall.SIGINT)
 	<-c
+
+	// exit gracefully
 	fmt.Printf("\r\nshutting down...\r\n")
 	ws.Shutdown()
 }

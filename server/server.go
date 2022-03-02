@@ -52,11 +52,11 @@ func NewWebServer() *WebServer {
 }
 
 func (ws *WebServer) registerRoutes() {
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/health/", func(w http.ResponseWriter, r *http.Request) {
 		status.HandleGetHealth(w, r, &ws.store)
 	})
 
-	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/register/", func(w http.ResponseWriter, r *http.Request) {
 		auth.HandleRegistrationStart(w, r, &ws.store, ws.webAuthn)
 	})
 
