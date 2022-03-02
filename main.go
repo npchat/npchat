@@ -1,27 +1,24 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/intob/npchat/auth"
 	"github.com/intob/npchat/cfg"
-	"github.com/intob/npchat/kv"
-	"github.com/intob/npchat/shareable"
-	"github.com/intob/npchat/status"
+	"github.com/intob/npchat/server"
 )
 
 func main() {
 	cfg.InitViper()
 
-	pool := kv.NewPool()
+	ws := server.NewWebServer()
 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		status.HandleGetHealth(w, r, pool)
-	})
-
-	http.HandleFunc("/register", auth.HandleRegister)
-	http.HandleFunc("/login", auth.HandleLogin)
-	http.HandleFunc("/shareable", shareable.HandleShareable)
-
-	listenAndServe()
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGTERM)
+	signal.Notify(c, syscall.SIGINT)
+	<-c
+	fmt.Printf("\r\nshutting down...\r\n")
+	ws.Shutdown()
 }

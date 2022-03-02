@@ -8,15 +8,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Maintains a pool of Agents
-//
-// If no agents are available & count < max,
-// Pool spawns a new one.
-type Pool struct {
-	Min   uint32
-	Count *uint32
-	Jobs  chan Job
-	Cfg   RocketCfg
+// Maintains a pool of connections,
+// handles jobs sent on the jobs channel
+type Store struct {
+	min   uint32
+	count *uint32
+	jobs  chan *Job
+	cfg   RocketCfg
 }
 
 type RocketCfg struct {
@@ -27,13 +25,13 @@ type RocketCfg struct {
 	KeyFile    string
 }
 
-func NewPool() *Pool {
+func NewStore() *Store {
 	count := uint32(0)
-	p := &Pool{
-		Count: &count,
-		Min:   viper.GetUint32(cfg.ROCKET_WORKERS_MIN),
-		Jobs:  make(chan Job),
-		Cfg: RocketCfg{
+	st := &Store{
+		count: &count,
+		min:   viper.GetUint32(cfg.ROCKET_WORKERS_MIN),
+		jobs:  make(chan *Job),
+		cfg: RocketCfg{
 			Network:    viper.GetString(cfg.ROCKET_NET),
 			Address:    viper.GetString(cfg.ROCKET_ADDRESS),
 			AuthSecret: viper.GetString(cfg.ROCKET_AUTH),
@@ -41,13 +39,17 @@ func NewPool() *Pool {
 			KeyFile:    viper.GetString(cfg.ROCKET_TLS_KEYFILE),
 		},
 	}
-	go p.StartWorkers()
-	return p
+	go st.startWorkers()
+	return st
 }
 
-func (p *Pool) StartWorkers() {
-	for i := uint32(0); i < p.Min; i++ {
-		go p.StartWorker()
+func (st *Store) StartJob(job *Job) {
+	st.jobs <- job
+}
+
+func (st *Store) startWorkers() {
+	for i := uint32(0); i < st.min; i++ {
+		go st.startWorker()
 	}
 
 	// periodically check we have enough workers
@@ -55,12 +57,12 @@ func (p *Pool) StartWorkers() {
 		time.Sleep(time.Second)
 
 		// atomaically load count
-		c := atomic.LoadUint32(p.Count)
+		c := atomic.LoadUint32(st.count)
 
-		if c >= p.Min {
+		if c >= st.min {
 			continue
 		}
 
-		go p.StartWorker()
+		go st.startWorker()
 	}
 }

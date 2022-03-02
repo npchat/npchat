@@ -10,6 +10,10 @@ import (
 const TLS_CERTFILE = "TLSCertFile"
 const TLS_KEYFILE = "TLSKeyFile"
 const PORT = "Port"
+const APP_DISPLAY_NAME = "AppDisplayName"
+const APP_ID = "AppId"
+const APP_ORIGIN = "AppOrigin"
+const APP_ICON = "AppIcon"
 
 const ROCKET_NET = "RocketNetwork"
 const ROCKET_ADDRESS = "RocketAddress"
@@ -32,6 +36,8 @@ func InitViper() {
 
 func initViperDefaults() {
 	viper.SetDefault(PORT, 8000)
+	viper.SetDefault(APP_DISPLAY_NAME, "npchat")
+	viper.SetDefault(APP_ICON, "https://npchat.org/media/npchat-logo-maskable.png")
 	viper.SetDefault(ROCKET_NET, "tcp")
 	viper.SetDefault(ROCKET_ADDRESS, ":8100")
 	viper.SetDefault(ROCKET_WORKERS_MIN, uint32(runtime.NumCPU()))
