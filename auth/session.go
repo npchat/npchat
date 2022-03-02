@@ -5,16 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/gob"
-	"time"
 
 	"github.com/duo-labs/webauthn/webauthn"
 	"github.com/intob/npchat/kv"
 )
 
-const SESSION = "session/"
 const SESSION_KEY_LEN = 32
-
-var SESSION_TTL = int64(time.Hour.Seconds())
+const SESSION = "session/"
 
 func GenerateSessionKey() (string, error) {
 	buf := make([]byte, SESSION_KEY_LEN)
@@ -25,10 +22,10 @@ func GenerateSessionKey() (string, error) {
 	return base64.RawStdEncoding.EncodeToString(buf), nil
 }
 
-func SetSessionData(st *kv.Store, sessionKey string, sessionData *webauthn.SessionData) error {
+func SetSessionData(st *kv.Store, sessionKey string, sessionData *webauthn.SessionData, ttl int64) error {
 	var buf bytes.Buffer
 	gob.NewEncoder(&buf).Encode(sessionData)
-	return st.Set(SESSION+sessionKey, buf.Bytes(), SESSION_TTL)
+	return st.Set(SESSION+sessionKey, buf.Bytes(), ttl)
 }
 
 func GetSessionData(st *kv.Store, sessionKey string) (webauthn.SessionData, error) {
