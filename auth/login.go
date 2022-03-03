@@ -12,10 +12,10 @@ import (
 )
 
 const LOGIN = "login/"
-const LOGIN_TTL int64 = 120
+const LOGIN_TTL = time.Minute * 2
 
 const AUTHED = "authed/"
-const AUTHED_TTL = time.Hour * 12
+const AUTHED_TTL = time.Hour
 
 func HandleLoginStart(w http.ResponseWriter, r *http.Request, st *kv.Store, authn *webauthn.WebAuthn) {
 	_, username := path.Split(r.URL.Path)
@@ -43,7 +43,7 @@ func HandleLoginStart(w http.ResponseWriter, r *http.Request, st *kv.Store, auth
 	}
 	w.Header().Add("session", sk)
 
-	err = SetSessionData(st, LOGIN+sk, sessionData, LOGIN_TTL)
+	err = SetSessionData(st, LOGIN+sk, sessionData, int64(LOGIN_TTL.Seconds()))
 	if err != nil {
 		http.Error(w, "failed to store login session", http.StatusInternalServerError)
 		return
@@ -90,7 +90,7 @@ func HandleLoginFinish(w http.ResponseWriter, r *http.Request, st *kv.Store, aut
 	}
 	w.Header().Add("session", sk)
 
-	st.Set(AUTHED+sk, []byte(user.Username), int64(AUTHED_TTL.Seconds()))
+	st.Set(AUTHED+sk, []byte(r.RemoteAddr), int64(AUTHED_TTL.Seconds()))
 
 	w.WriteHeader(http.StatusOK)
 }

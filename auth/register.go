@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/duo-labs/webauthn/protocol"
 	"github.com/duo-labs/webauthn/webauthn"
@@ -12,7 +13,7 @@ import (
 )
 
 const REGISTRATION = "registration/"
-const REGISTRATION_TTL int64 = 120 // 2 minutes
+const REGISTRATION_TTL = time.Minute * 2
 
 // Tries to return a CredentialOptions object to the client
 func HandleRegistrationStart(w http.ResponseWriter, r *http.Request, st *kv.Store, authn *webauthn.WebAuthn) {
@@ -47,7 +48,7 @@ func HandleRegistrationStart(w http.ResponseWriter, r *http.Request, st *kv.Stor
 	// the client must set this as the authorization header
 	w.Header().Add("session", sk)
 
-	err = SetSessionData(st, REGISTRATION+sk, sessionData, REGISTRATION_TTL)
+	err = SetSessionData(st, REGISTRATION+sk, sessionData, int64(REGISTRATION_TTL.Seconds()))
 	if err != nil {
 		http.Error(w, "failed to store session data", http.StatusInternalServerError)
 		return
